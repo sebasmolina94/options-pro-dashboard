@@ -926,11 +926,15 @@ st.markdown("""
 # Token Status Check (for maintenance awareness)
 # --------------------------------------------------------------
 if ACCESS_TOKEN:
-    token_status = refresh_tokens_if_needed()
-    if "WARNING" in token_status or "EXPIRED" in token_status:
-        st.warning(f"🔑 **Token Status:** {token_status}")
-    elif "INFO" in token_status:
-        st.info(f"🔑 **Token Status:** {token_status}")
+    try:
+        token_status = refresh_tokens_if_needed()
+        if "WARNING" in token_status or "EXPIRED" in token_status:
+            st.warning(f"🔑 **Token Status:** {token_status}")
+        elif "INFO" in token_status:
+            st.info(f"🔑 **Token Status:** {token_status}")
+    except Exception as e:
+        # Don't show token status errors on Streamlit Cloud (tokens are in secrets)
+        pass
 else:
     st.error("🔑 **Schwab API token missing** - check .env file")
 

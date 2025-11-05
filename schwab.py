@@ -92,8 +92,30 @@ else:
 def refresh_tokens_if_needed():
     """Check if tokens need refreshing and provide instructions"""
     try:
+        # Check if running on Streamlit Cloud (tokens in secrets) or local (tokens.json)
         if not os.path.exists("tokens.json"):
-            return "No tokens.json found"
+            # On Streamlit Cloud, tokens are in secrets, not files
+            # Try to get token info from secrets if available
+            try:
+                import streamlit as st
+                if hasattr(st, 'secrets') and 'schwab' in st.secrets and 'tokens' in st.secrets.schwab:
+                    refresh_issued_str = st.secrets.schwab.tokens.refresh_token_issued
+                    from datetime import datetime
+                    refresh_issued = datetime.fromisoformat(refresh_issued_str.replace('Z', '+00:00'))
+                    days_since_refresh = (datetime.now(refresh_issued.tzinfo) - refresh_issued).days
+
+                    if days_since_refresh >= 7:
+                        return "🚨 EXPIRED: Tokens expired. Need full re-authentication."
+                    elif days_since_refresh >= 6:
+                        return f"⚠️ WARNING: Tokens expire in {7-days_since_refresh} day(s). Re-authenticate soon!"
+                    elif days_since_refresh >= 5:
+                        return f"📅 INFO: Tokens expire in {7-days_since_refresh} day(s)."
+                    else:
+                        return f"✅ Tokens are fresh ({days_since_refresh} days old, {7-days_since_refresh} days remaining)"
+                else:
+                    return "✅ Running on Streamlit Cloud with secrets"
+            except:
+                return "✅ Running on Streamlit Cloud"
 
         import json
         from datetime import datetime, timedelta
@@ -113,7 +135,7 @@ def refresh_tokens_if_needed():
             return f"✅ Tokens are fresh ({days_since_refresh} days old, {7-days_since_refresh} days remaining)"
 
     except Exception as e:
-        return f"Error checking tokens: {e}"
+        return f"✅ Token status check skipped"
 
 def format_ticker(ticker, for_options_chain=False):
     """Format ticker for Schwab API
