@@ -86,10 +86,16 @@ def get_earnings_calendar():
     Only fetches new data if cache file is older than 24 hours or doesn't exist.
     """
     from datetime import datetime, timedelta
-    import yfinance as yf
     import os
     import json
     from dotenv import load_dotenv
+
+    try:
+        import yfinance as yf
+        YFINANCE_AVAILABLE = True
+    except ImportError:
+        print("⚠️ yfinance not available - earnings calendar disabled")
+        YFINANCE_AVAILABLE = False
 
     # Load environment variables
     load_dotenv()
@@ -114,10 +120,13 @@ def get_earnings_calendar():
     today = datetime.now().date()
     future_date = today + timedelta(days=30)
 
-    # Check if user wants to use real data (we'll use Yahoo Finance instead of FMP)
-    USE_REAL_DATA = os.getenv('FMP_API_KEY') and os.getenv('FMP_API_KEY') != "YOUR_FMP_API_KEY_HERE"
+    # Check if yfinance is available and user wants to use real data
+    USE_REAL_DATA = YFINANCE_AVAILABLE and os.getenv('FMP_API_KEY') and os.getenv('FMP_API_KEY') != "YOUR_FMP_API_KEY_HERE"
 
-    if not USE_REAL_DATA:
+    if not YFINANCE_AVAILABLE:
+        print("⚠️ yfinance not available - earnings calendar disabled")
+        return {}
+    elif not USE_REAL_DATA:
         print("⚠️ Real earnings data disabled, using sample data")
         return get_sample_earnings_data()
 
@@ -328,7 +337,10 @@ def get_real_earnings_calendar():
     # Example 2: Yahoo Finance using yfinance
     # Requires: pip install yfinance
     """
-    import yfinance as yf
+    try:
+        import yfinance as yf
+    except ImportError:
+        return {}
     from datetime import datetime, timedelta
 
     earnings_data = {}
