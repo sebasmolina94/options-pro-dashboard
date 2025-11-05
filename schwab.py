@@ -58,6 +58,27 @@ if SCHWABDEV_AVAILABLE:
 
         # Now create client (should find tokens.json if it exists)
         client = schwabdev.Client(client_id, client_secret, redirect_uri)
+
+        # Check token expiration and warn if refresh token is expiring soon
+        try:
+            if os.path.exists("tokens.json"):
+                import json
+                from datetime import datetime, timedelta
+                with open("tokens.json", "r") as f:
+                    token_data = json.load(f)
+
+                refresh_issued = datetime.fromisoformat(token_data["refresh_token_issued"].replace('Z', '+00:00'))
+                days_since_refresh = (datetime.now(refresh_issued.tzinfo) - refresh_issued).days
+
+                if days_since_refresh >= 6:
+                    print(f"⚠️ WARNING: Refresh token is {days_since_refresh} days old. Consider re-authenticating soon.")
+                elif days_since_refresh >= 5:
+                    print(f"📅 INFO: Refresh token is {days_since_refresh} days old. Will expire in {7-days_since_refresh} days.")
+                else:
+                    print(f"✅ Tokens are fresh ({days_since_refresh} days old)")
+        except Exception as e:
+            print(f"Could not check token age: {e}")
+
         ACCESS_TOKEN = True
     except Exception as e:
         print(f"Error initializing Schwab client: {e}")
@@ -67,6 +88,32 @@ else:
     print("⚠️ schwabdev not available - running in demo mode")
     client = None
     ACCESS_TOKEN = False
+
+def refresh_tokens_if_needed():
+    """Check if tokens need refreshing and provide instructions"""
+    try:
+        if not os.path.exists("tokens.json"):
+            return "No tokens.json found"
+
+        import json
+        from datetime import datetime, timedelta
+        with open("tokens.json", "r") as f:
+            token_data = json.load(f)
+
+        refresh_issued = datetime.fromisoformat(token_data["refresh_token_issued"].replace('Z', '+00:00'))
+        days_since_refresh = (datetime.now(refresh_issued.tzinfo) - refresh_issued).days
+
+        if days_since_refresh >= 7:
+            return "🚨 EXPIRED: Tokens expired. Need full re-authentication."
+        elif days_since_refresh >= 6:
+            return f"⚠️ WARNING: Tokens expire in {7-days_since_refresh} day(s). Re-authenticate soon!"
+        elif days_since_refresh >= 5:
+            return f"📅 INFO: Tokens expire in {7-days_since_refresh} day(s)."
+        else:
+            return f"✅ Tokens are fresh ({days_since_refresh} days old, {7-days_since_refresh} days remaining)"
+
+    except Exception as e:
+        return f"Error checking tokens: {e}"
 
 def format_ticker(ticker, for_options_chain=False):
     """Format ticker for Schwab API

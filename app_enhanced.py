@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 import time
 from core_enhanced import compute_exposures_dual, black_scholes_greeks
-from schwab import get_options_chain, get_underlying_price, ACCESS_TOKEN
+from schwab import get_options_chain, get_underlying_price, ACCESS_TOKEN, refresh_tokens_if_needed
 from config import ALL_TICKERS
 from trading_plan import generate_trading_plan, get_key_levels
 
@@ -921,6 +921,18 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# --------------------------------------------------------------
+# Token Status Check (for maintenance awareness)
+# --------------------------------------------------------------
+if ACCESS_TOKEN:
+    token_status = refresh_tokens_if_needed()
+    if "WARNING" in token_status or "EXPIRED" in token_status:
+        st.warning(f"🔑 **Token Status:** {token_status}")
+    elif "INFO" in token_status:
+        st.info(f"🔑 **Token Status:** {token_status}")
+else:
+    st.error("🔑 **Schwab API token missing** - check .env file")
 
 # --------------------------------------------------------------
 # Auto-Refresh Configuration (seamless refresh without page reload)
