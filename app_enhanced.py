@@ -1534,20 +1534,28 @@ def load_enhanced_data(symbol: str, n_exp: int = 4):
         nearest = df_raw.drop_duplicates("expiry").sort_values("exp_dt").head(n_exp)["expiry"].tolist()
         df = df_raw[df_raw["expiry"].isin(nearest)].copy()
 
-        # Filter by minimum OI
+        # Get ticker config
         cfg = next(t for t in ALL_TICKERS if t.symbol == symbol)
-        df = df[df["openInterest"] >= cfg.min_oi]
 
-        # Filter out invalid strike increments (e.g., SPY should only have $1.00 increments)
-        strike_increment = getattr(cfg, 'strike_increment', 1.0)
-        if strike_increment >= 1.0:  # Only filter for $1.00+ increments
-            # Keep only strikes that are multiples of the increment
-            df = df[df['strike'] % strike_increment == 0]
-
-        # Special handling for SPX
+        # Special handling for SPX - Apply multiplier BEFORE OI filtering
         if cfg.is_index and cfg.symbol == "SPX":
             df["openInterest"] = df["openInterest"] * 10
-        
+
+        # Filter by minimum OI (after SPX multiplier if applicable)
+        # Special case: Skip OI filtering for SPX since it often has 0 OI but meaningful volume
+        if cfg.symbol != "SPX":
+            df = df[df["openInterest"] >= cfg.min_oi]
+
+        # Filter out invalid strike increments for specific tickers
+        # SPY should only have $1.00 increments (filter out 0.5 strikes that have zero OI)
+        if symbol == "SPY":
+            # Keep only whole dollar strikes for SPY
+            df = df[df['strike'] % 1.0 == 0]
+        elif symbol == "SPX":
+            # Keep only $5.00 increment strikes for SPX
+            df = df[df['strike'] % 5.0 == 0]
+        # For other tickers, trust the Schwab API data (don't filter strikes)
+
         # Compute BOTH OI and Volume exposures
         df = compute_exposures_dual(df, S)
 

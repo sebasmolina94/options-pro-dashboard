@@ -9,16 +9,16 @@ class TickerConfig:
     is_index: bool = False
     min_oi: int = 10
     has_daily_expirations: bool = False  # True for major indices/ETFs with daily options
-    strike_increment: float = 1.0  # Strike price increment (1.0 for SPY, 0.5 for some others)
+
 
 # ============================================================================
 # TOP PRIORITY TICKERS (Always at top of dropdown)
 # ============================================================================
 TOP_PRIORITY = [
-    TickerConfig("SPY", "SPDR S&P 500 ETF", multiplier=100, has_daily_expirations=True, strike_increment=1.0),
-    TickerConfig("SPX", "S&P 500 Index", multiplier=100, has_daily_expirations=True, strike_increment=5.0),
-    TickerConfig("QQQ", "Invesco QQQ Trust", multiplier=100, has_daily_expirations=True, strike_increment=1.0),
-    TickerConfig("IWM", "iShares Russell 2000", multiplier=100, has_daily_expirations=True, strike_increment=1.0),
+    TickerConfig("SPY", "SPDR S&P 500 ETF", multiplier=100, has_daily_expirations=True),
+    TickerConfig("SPX", "S&P 500 Index", multiplier=100, has_daily_expirations=True),
+    TickerConfig("QQQ", "Invesco QQQ Trust", multiplier=100, has_daily_expirations=True),
+    TickerConfig("IWM", "iShares Russell 2000", multiplier=100, has_daily_expirations=True),
     TickerConfig("VIX", "CBOE Volatility Index", multiplier=100, has_daily_expirations=True),
 ]
 
