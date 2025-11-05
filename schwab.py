@@ -27,23 +27,11 @@ if SCHWABDEV_AVAILABLE:
             client_secret = st.secrets["schwab"]["client_secret"]
             redirect_uri = st.secrets["schwab"]["redirect_uri"]
             print("Using Streamlit secrets for Schwab API")
-        except:
-            # Fallback to environment variables (for local development)
-            client_id = os.getenv('SCHWAB_APP_KEY')
-            client_secret = os.getenv('SCHWAB_APP_SECRET')
-            redirect_uri = os.getenv('SCHWAB_CALLBACK_URL')
-            print("Using environment variables for Schwab API")
 
-        client = schwabdev.Client(client_id, client_secret, redirect_uri)
-
-        # If using Streamlit secrets, try to load tokens from secrets
-        try:
-            import streamlit as st
+            # Create tokens.json from secrets BEFORE creating client
             if "tokens" in st.secrets.get("schwab", {}):
                 tokens = st.secrets["schwab"]["tokens"]
-                # Create tokens.json from secrets
                 import json
-                from datetime import datetime
                 token_data = {
                     "access_token_issued": tokens["access_token_issued"],
                     "refresh_token_issued": tokens["refresh_token_issued"],
@@ -58,10 +46,18 @@ if SCHWABDEV_AVAILABLE:
                 }
                 with open("tokens.json", "w") as f:
                     json.dump(token_data, f, indent=4)
-                print("✅ Loaded tokens from Streamlit secrets")
-        except Exception as e:
-            print(f"Note: Could not load tokens from secrets: {e}")
+                print("✅ Created tokens.json from Streamlit secrets")
 
+        except Exception as e:
+            print(f"Streamlit secrets error: {e}")
+            # Fallback to environment variables (for local development)
+            client_id = os.getenv('SCHWAB_APP_KEY')
+            client_secret = os.getenv('SCHWAB_APP_SECRET')
+            redirect_uri = os.getenv('SCHWAB_CALLBACK_URL')
+            print("Using environment variables for Schwab API")
+
+        # Now create client (should find tokens.json if it exists)
+        client = schwabdev.Client(client_id, client_secret, redirect_uri)
         ACCESS_TOKEN = True
     except Exception as e:
         print(f"Error initializing Schwab client: {e}")
