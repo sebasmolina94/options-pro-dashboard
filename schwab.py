@@ -3,7 +3,14 @@ import os
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-import schwabdev
+try:
+    import schwabdev
+    SCHWABDEV_AVAILABLE = True
+except ImportError:
+    print("⚠️ schwabdev not available - using mock data")
+    SCHWABDEV_AVAILABLE = False
+    schwabdev = None
+
 from dotenv import load_dotenv
 import json
 
@@ -11,25 +18,30 @@ import json
 load_dotenv()
 
 # Initialize Schwab client
-try:
-    # Try Streamlit secrets first (for cloud deployment)
+if SCHWABDEV_AVAILABLE:
     try:
-        import streamlit as st
-        client_id = st.secrets["schwab"]["client_id"]
-        client_secret = st.secrets["schwab"]["client_secret"]
-        redirect_uri = st.secrets["schwab"]["redirect_uri"]
-        print("Using Streamlit secrets for Schwab API")
-    except:
-        # Fallback to environment variables (for local development)
-        client_id = os.getenv('SCHWAB_APP_KEY')
-        client_secret = os.getenv('SCHWAB_APP_SECRET')
-        redirect_uri = os.getenv('SCHWAB_CALLBACK_URL')
-        print("Using environment variables for Schwab API")
+        # Try Streamlit secrets first (for cloud deployment)
+        try:
+            import streamlit as st
+            client_id = st.secrets["schwab"]["client_id"]
+            client_secret = st.secrets["schwab"]["client_secret"]
+            redirect_uri = st.secrets["schwab"]["redirect_uri"]
+            print("Using Streamlit secrets for Schwab API")
+        except:
+            # Fallback to environment variables (for local development)
+            client_id = os.getenv('SCHWAB_APP_KEY')
+            client_secret = os.getenv('SCHWAB_APP_SECRET')
+            redirect_uri = os.getenv('SCHWAB_CALLBACK_URL')
+            print("Using environment variables for Schwab API")
 
-    client = schwabdev.Client(client_id, client_secret, redirect_uri)
-    ACCESS_TOKEN = True
-except Exception as e:
-    print(f"Error initializing Schwab client: {e}")
+        client = schwabdev.Client(client_id, client_secret, redirect_uri)
+        ACCESS_TOKEN = True
+    except Exception as e:
+        print(f"Error initializing Schwab client: {e}")
+        client = None
+        ACCESS_TOKEN = False
+else:
+    print("⚠️ schwabdev not available - running in demo mode")
     client = None
     ACCESS_TOKEN = False
 
@@ -92,6 +104,15 @@ def get_valid_expirations(ticker_config, n_expirations=4):
 
 def get_underlying_price(ticker):
     """Get current underlying price"""
+    if not SCHWABDEV_AVAILABLE or not ACCESS_TOKEN:
+        # Return mock prices for demo mode
+        mock_prices = {
+            'SPY': 450.0, 'QQQ': 380.0, 'IWM': 200.0, 'AAPL': 180.0,
+            'MSFT': 350.0, 'GOOGL': 140.0, 'AMZN': 150.0, 'TSLA': 250.0,
+            'NVDA': 450.0, 'META': 320.0, '/ES': 4500.0, '/NQ': 15000.0
+        }
+        return mock_prices.get(ticker, 100.0)
+
     try:
         formatted_ticker = format_ticker(ticker)
         quote_response = client.quotes(formatted_ticker)
@@ -114,6 +135,11 @@ def get_options_chain(ticker, n_expirations=4):
     if not ticker_config:
         print(f"Unknown ticker {ticker}, using default settings")
         ticker_config = type('Config', (), {'has_daily_expirations': False, 'symbol': ticker})()
+
+    # Return mock data if schwabdev is not available
+    if not SCHWABDEV_AVAILABLE or not ACCESS_TOKEN:
+        print(f"⚠️ Using mock data for {ticker} options chain")
+        return generate_sample_data(ticker, n_expirations)
 
     try:
         # Use different formatting for options chain vs underlying price
