@@ -2,3 +2,19 @@ options_data.db
 .env
 tokens.json
 my.env
+
+# Streamlit secrets (DO NOT COMMIT)
+.streamlit/secrets.toml
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
