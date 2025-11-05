@@ -177,7 +177,7 @@ def get_underlying_price(ticker):
     if not SCHWABDEV_AVAILABLE or not ACCESS_TOKEN:
         # Return mock prices for demo mode
         mock_prices = {
-            'SPY': 450.0, 'QQQ': 380.0, 'IWM': 200.0, 'AAPL': 180.0,
+            'SPY': 450.0, 'SPX': 6771.55, 'QQQ': 380.0, 'IWM': 200.0, 'AAPL': 180.0,
             'MSFT': 350.0, 'GOOGL': 140.0, 'AMZN': 150.0, 'TSLA': 250.0,
             'NVDA': 450.0, 'META': 320.0, '/ES': 4500.0, '/NQ': 15000.0
         }
@@ -216,8 +216,12 @@ def get_options_chain(ticker, n_expirations=4):
         options_ticker = format_ticker(ticker, for_options_chain=True)
         current_price = get_underlying_price(ticker)
 
-        # Calculate strike range (±30% from current price to match professional platforms)
-        strike_range = 0.30
+        # Calculate strike range based on ticker type
+        if ticker == "SPX":
+            strike_range = 0.10  # ±10% for SPX (more focused range)
+        else:
+            strike_range = 0.30  # ±30% for other tickers (broader range)
+
         min_strike = current_price * (1 - strike_range)
         max_strike = current_price * (1 + strike_range)
 
@@ -261,7 +265,11 @@ def get_options_chain(ticker, n_expirations=4):
                         continue
 
                     for option in options:
-                        if option.get('openInterest', 0) > 0:
+                        # Include all options (even with 0 OI) - OI can be 0 after hours or for new strikes
+                        # Only filter out options with no bid/ask (completely inactive)
+                        bid = float(option.get('bid', 0))
+                        ask = float(option.get('ask', 0))
+                        if bid > 0 or ask > 0 or option.get('openInterest', 0) > 0:
                             options_data.append({
                                 'symbol': option['symbol'],
                                 'strike': strike,
@@ -296,7 +304,11 @@ def get_options_chain(ticker, n_expirations=4):
                         continue
 
                     for option in options:
-                        if option.get('openInterest', 0) > 0:
+                        # Include all options (even with 0 OI) - OI can be 0 after hours or for new strikes
+                        # Only filter out options with no bid/ask (completely inactive)
+                        bid = float(option.get('bid', 0))
+                        ask = float(option.get('ask', 0))
+                        if bid > 0 or ask > 0 or option.get('openInterest', 0) > 0:
                             options_data.append({
                                 'symbol': option['symbol'],
                                 'strike': strike,
@@ -357,13 +369,22 @@ def generate_sample_data(ticker, n_expirations=4):
     # Use same expiration logic as real data
     expirations = get_valid_expirations(ticker_config, n_expirations)
 
-    # Generate strikes in ±30% range using proper strike increments
-    strike_range = 0.30
+    # Generate strikes with appropriate range based on ticker
+    if ticker == "SPX":
+        strike_range = 0.10  # ±10% for SPX (more focused range)
+    else:
+        strike_range = 0.30  # ±30% for other tickers (broader range)
+
     min_strike = current_price * (1 - strike_range)
     max_strike = current_price * (1 + strike_range)
 
-    # Get strike increment from ticker config (default 1.0)
-    strike_increment = getattr(ticker_config, 'strike_increment', 1.0)
+    # Generate strikes with appropriate increments based on ticker
+    if ticker == "SPY":
+        strike_increment = 1.0  # SPY uses $1.00 increments
+    elif ticker == "SPX":
+        strike_increment = 5.0  # SPX uses $5.00 increments
+    else:
+        strike_increment = 1.0  # Default to $1.00 for most tickers
 
     strikes = []
     # Generate strikes using proper increments
