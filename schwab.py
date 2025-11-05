@@ -357,17 +357,24 @@ def generate_sample_data(ticker, n_expirations=4):
     # Use same expiration logic as real data
     expirations = get_valid_expirations(ticker_config, n_expirations)
 
-    # Generate strikes in ±30% range (same as real data)
+    # Generate strikes in ±30% range using proper strike increments
     strike_range = 0.30
     min_strike = current_price * (1 - strike_range)
     max_strike = current_price * (1 + strike_range)
 
+    # Get strike increment from ticker config (default 1.0)
+    strike_increment = getattr(ticker_config, 'strike_increment', 1.0)
+
     strikes = []
-    num_strikes = 15  # Reasonable number of strikes
-    strike_step = (max_strike - min_strike) / (num_strikes - 1)
-    for i in range(num_strikes):
-        strike = min_strike + (i * strike_step)
-        strikes.append(round(strike, 0))
+    # Generate strikes using proper increments
+    # Start from the nearest increment below min_strike
+    start_strike = (int(min_strike / strike_increment) * strike_increment)
+    current_strike = start_strike
+
+    while current_strike <= max_strike and len(strikes) < 25:  # Limit to reasonable number
+        if current_strike >= min_strike:  # Only include strikes in our range
+            strikes.append(current_strike)
+        current_strike += strike_increment
 
     print(f"Sample data: {ticker} Price=${current_price:.2f}, Strikes=${min_strike:.0f}-${max_strike:.0f}, Expirations={expirations}")
 
