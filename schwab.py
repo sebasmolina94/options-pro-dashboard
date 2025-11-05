@@ -35,6 +35,33 @@ if SCHWABDEV_AVAILABLE:
             print("Using environment variables for Schwab API")
 
         client = schwabdev.Client(client_id, client_secret, redirect_uri)
+
+        # If using Streamlit secrets, try to load tokens from secrets
+        try:
+            import streamlit as st
+            if "tokens" in st.secrets.get("schwab", {}):
+                tokens = st.secrets["schwab"]["tokens"]
+                # Create tokens.json from secrets
+                import json
+                from datetime import datetime
+                token_data = {
+                    "access_token_issued": tokens["access_token_issued"],
+                    "refresh_token_issued": tokens["refresh_token_issued"],
+                    "token_dictionary": {
+                        "expires_in": 1800,
+                        "token_type": "Bearer",
+                        "scope": "api",
+                        "refresh_token": tokens["refresh_token"],
+                        "access_token": tokens["access_token"],
+                        "id_token": ""
+                    }
+                }
+                with open("tokens.json", "w") as f:
+                    json.dump(token_data, f, indent=4)
+                print("✅ Loaded tokens from Streamlit secrets")
+        except Exception as e:
+            print(f"Note: Could not load tokens from secrets: {e}")
+
         ACCESS_TOKEN = True
     except Exception as e:
         print(f"Error initializing Schwab client: {e}")
