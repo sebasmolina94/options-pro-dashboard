@@ -1,0 +1,105 @@
+{
+  "timestamp": "2025-11-04T21:31:27.137054",
+  "earnings_data": {
+    "HOOD": {
+      "date": "2025-11-05",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "RIVN": {
+      "date": "2025-11-04",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "ABNB": {
+      "date": "2025-11-06",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "UBER": {
+      "date": "2025-11-04",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "SPOT": {
+      "date": "2025-11-04",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "NVDA": {
+      "date": "2025-11-19",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "AMD": {
+      "date": "2025-11-04",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "ARM": {
+      "date": "2025-11-05",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "AMAT": {
+      "date": "2025-11-13",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "SMCI": {
+      "date": "2025-11-04",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "CRM": {
+      "date": "2025-12-03",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "DDOG": {
+      "date": "2025-11-06",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "WDAY": {
+      "date": "2025-11-25",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "SNOW": {
+      "date": "2025-12-03",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "MDB": {
+      "date": "2025-12-01",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "CRWD": {
+      "date": "2025-11-25",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "OKTA": {
+      "date": "2025-12-02",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "ZS": {
+      "date": "2025-12-02",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "PANW": {
+      "date": "2025-11-19",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    },
+    "FTNT": {
+      "date": "2025-11-05",
+      "time": "AMC",
+      "quarter": "Q3 2025"
+    }
+  }
+}
