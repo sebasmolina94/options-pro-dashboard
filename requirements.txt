@@ -3,6 +3,7 @@ pandas
 plotly
 numpy
 scipy
+schwabdev>=2.5.1
 python-dotenv
 yfinance==0.2.18
 pytz==2023.3
