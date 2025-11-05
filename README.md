@@ -1,4 +1,4 @@
-# EzOptions - Schwab Options Trading Dashboard
+Schwab Options Trading Dashboard
 
 A real-time options trading dashboard that integrates with the Schwab API to provide comprehensive options analysis and visualization.
 
