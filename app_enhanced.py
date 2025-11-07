@@ -953,14 +953,20 @@ else:
 # --------------------------------------------------------------
 # Auto-Refresh Configuration (seamless refresh without page reload)
 # --------------------------------------------------------------
-REFRESH_INTERVAL = 15  # seconds - reduced for faster updates
+REFRESH_INTERVAL = 10  # seconds - fast updates for live trading
 
 # Initialize session state for auto-refresh
 if 'last_refresh' not in st.session_state:
     st.session_state.last_refresh = time.time()
+if 'refresh_count' not in st.session_state:
+    st.session_state.refresh_count = 0
 
 # Get current time for refresh calculations
 current_time = time.time()
+
+# Calculate time until next refresh for display
+time_since_refresh = current_time - st.session_state.last_refresh
+time_until_refresh = max(0, REFRESH_INTERVAL - time_since_refresh)
 
 # --------------------------------------------------------------
 # Professional Header - Options Pro Style
@@ -1119,6 +1125,8 @@ with col1:
 time_since_refresh = current_time - st.session_state.last_refresh
 if time_since_refresh > REFRESH_INTERVAL:
     st.session_state.last_refresh = current_time
+    st.session_state.refresh_count += 1
+    # Clear only data cache, keep UI state
     st.cache_data.clear()
     # Preserve ticker selection in URL
     current_ticker = st.session_state.get('selected_ticker', 'SPY')
@@ -1244,7 +1252,7 @@ with col3:
             right: 0;
             height: 3px;
             background: linear-gradient(90deg, transparent, #4ade80, transparent);
-            animation: refreshProgress {REFRESH_INTERVAL}s linear infinite;
+            animation: refreshProgress 10s linear infinite;
         '></div>
         <div style='text-align: center; position: relative; z-index: 1;'>
             <div style='
@@ -1254,7 +1262,7 @@ with col3:
                 margin-bottom: 8px;
                 text-shadow: 0 0 15px rgba(74, 222, 128, 0.6);
             '>
-                🔄 Seamless Refresh
+                🔄 Live Updates
             </div>
             <div style='
                 background: linear-gradient(135deg, #ffffff, #4ade80);
@@ -1274,7 +1282,7 @@ with col3:
                 font-weight: 500;
                 margin-bottom: 4px;
             '>
-                15s interval
+                10s interval • #{st.session_state.refresh_count}
             </div>
             <div style='
                 color: rgba(255, 255, 255, 0.5);
@@ -1303,6 +1311,7 @@ with col3:
     # Manual refresh button
     if st.button("🔄 Refresh Now", use_container_width=True):
         st.session_state.last_refresh = current_time
+        st.session_state.refresh_count += 1
         st.cache_data.clear()
         # Update URL to preserve ticker selection
         current_ticker = st.session_state.get('selected_ticker', 'SPY')
@@ -1536,7 +1545,7 @@ def store_interval_data_for_replay(symbol: str, price: float, df: pd.DataFrame):
 # --------------------------------------------------------------
 # Data Load with Dual Calculations
 # --------------------------------------------------------------
-@st.cache_data(ttl=180, show_spinner=False)
+@st.cache_data(ttl=10, show_spinner=False)
 def load_enhanced_data(symbol: str, n_exp: int = 4):
     try:
         S = get_underlying_price(symbol)
