@@ -951,7 +951,7 @@ else:
     st.error("🔑 **Schwab API token missing** - check .env file")
 
 # --------------------------------------------------------------
-# Auto-Refresh Configuration (seamless refresh without page reload)
+# Auto-Refresh Configuration (using st.empty() for true auto-refresh)
 # --------------------------------------------------------------
 REFRESH_INTERVAL = 10  # seconds - fast updates for live trading
 
@@ -960,6 +960,8 @@ if 'last_refresh' not in st.session_state:
     st.session_state.last_refresh = time.time()
 if 'refresh_count' not in st.session_state:
     st.session_state.refresh_count = 0
+if 'auto_refresh_enabled' not in st.session_state:
+    st.session_state.auto_refresh_enabled = True
 
 # Get current time for refresh calculations
 current_time = time.time()
@@ -967,6 +969,10 @@ current_time = time.time()
 # Calculate time until next refresh for display
 time_since_refresh = current_time - st.session_state.last_refresh
 time_until_refresh = max(0, REFRESH_INTERVAL - time_since_refresh)
+
+# Auto-refresh using st.empty() placeholder
+if 'refresh_placeholder' not in st.session_state:
+    st.session_state.refresh_placeholder = st.empty()
 
 # --------------------------------------------------------------
 # Professional Header - Options Pro Style
@@ -1119,19 +1125,37 @@ with col1:
         st.query_params.ticker = selected
 
 # --------------------------------------------------------------
-# Seamless Auto-Refresh Logic (no page reload)
+# Aggressive Auto-Refresh Logic (forces refresh every 10 seconds)
 # --------------------------------------------------------------
 # Check if it's time for automatic refresh
 time_since_refresh = current_time - st.session_state.last_refresh
-if time_since_refresh > REFRESH_INTERVAL:
+
+# Debug info (remove after testing)
+# st.write(f"Debug: Time since refresh: {time_since_refresh:.1f}s, Interval: {REFRESH_INTERVAL}s")
+
+if time_since_refresh >= REFRESH_INTERVAL:
     st.session_state.last_refresh = current_time
     st.session_state.refresh_count += 1
-    # Clear only data cache, keep UI state
+    # Clear all caches to force fresh data
     st.cache_data.clear()
     # Preserve ticker selection in URL
     current_ticker = st.session_state.get('selected_ticker', 'SPY')
     st.query_params.ticker = current_ticker
+    # Force immediate refresh
     st.rerun()
+
+# Also add a fallback refresh trigger using JavaScript
+st.markdown(f"""
+<script>
+setTimeout(function() {{
+    if (window.location.search.indexOf('refresh=') === -1) {{
+        const url = new URL(window.location);
+        url.searchParams.set('refresh', Date.now());
+        window.location.href = url.toString();
+    }}
+}}, {REFRESH_INTERVAL * 1000});
+</script>
+""", unsafe_allow_html=True)
 
 with col2:
     try:
@@ -1264,7 +1288,7 @@ with col3:
             '>
                 🔄 Live Updates
             </div>
-            <div style='
+            <div class='refresh-countdown' style='
                 background: linear-gradient(135deg, #ffffff, #4ade80);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
