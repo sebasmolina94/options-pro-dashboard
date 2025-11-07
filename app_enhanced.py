@@ -1125,26 +1125,15 @@ with col1:
         st.query_params.ticker = selected
 
 # --------------------------------------------------------------
-# Aggressive Auto-Refresh Logic (forces refresh every 10 seconds)
+# Auto-Refresh Debug Info (will be moved to end of script)
 # --------------------------------------------------------------
-# Check if it's time for automatic refresh
+# Calculate time since last refresh for display
 time_since_refresh = current_time - st.session_state.last_refresh
 
 # Debug info (remove after testing)
-# st.write(f"Debug: Time since refresh: {time_since_refresh:.1f}s, Interval: {REFRESH_INTERVAL}s")
+st.write(f"🔍 Debug: Time since refresh: {time_since_refresh:.1f}s, Interval: {REFRESH_INTERVAL}s, Count: #{st.session_state.refresh_count}")
 
-if time_since_refresh >= REFRESH_INTERVAL:
-    st.session_state.last_refresh = current_time
-    st.session_state.refresh_count += 1
-    # Clear all caches to force fresh data
-    st.cache_data.clear()
-    # Preserve ticker selection in URL
-    current_ticker = st.session_state.get('selected_ticker', 'SPY')
-    st.query_params.ticker = current_ticker
-    # Force immediate refresh
-    st.rerun()
-
-# Also add a fallback refresh trigger using JavaScript
+# JavaScript fallback refresh (browser-based timer)
 st.markdown(f"""
 <script>
 setTimeout(function() {{
@@ -2483,3 +2472,26 @@ with col4:
 # Earnings Calendar Section
 # --------------------------------------------------------------
 display_earnings_calendar()
+
+# --------------------------------------------------------------
+# Final Auto-Refresh Check (must be at the very end)
+# --------------------------------------------------------------
+# This is the final check that triggers the refresh
+# It must be at the end of the script to work properly
+current_time_final = time.time()
+time_since_refresh_final = current_time_final - st.session_state.last_refresh
+
+if time_since_refresh_final >= REFRESH_INTERVAL:
+    # Update refresh tracking
+    st.session_state.last_refresh = current_time_final
+    st.session_state.refresh_count += 1
+
+    # Clear all cached data to force fresh API calls
+    st.cache_data.clear()
+
+    # Preserve ticker selection across refresh
+    current_ticker = st.session_state.get('selected_ticker', 'SPY')
+    st.query_params.ticker = current_ticker
+
+    # Force the refresh - this MUST be the last line
+    st.rerun()
