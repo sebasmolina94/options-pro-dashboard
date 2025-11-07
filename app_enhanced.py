@@ -1133,15 +1133,23 @@ time_since_refresh = current_time - st.session_state.last_refresh
 # Debug info (remove after testing)
 st.write(f"🔍 Debug: Time since refresh: {time_since_refresh:.1f}s, Interval: {REFRESH_INTERVAL}s, Count: #{st.session_state.refresh_count}")
 
-# JavaScript fallback refresh (browser-based timer)
+# Force auto-refresh using multiple methods for maximum reliability
 st.markdown(f"""
+<meta http-equiv="refresh" content="{REFRESH_INTERVAL}">
 <script>
-setTimeout(function() {{
-    if (window.location.search.indexOf('refresh=') === -1) {{
-        const url = new URL(window.location);
-        url.searchParams.set('refresh', Date.now());
-        window.location.href = url.toString();
+// Method 1: Auto-click refresh button every 10 seconds
+setInterval(function() {{
+    const refreshButton = document.querySelector('button[key="manual_refresh"]');
+    if (refreshButton) {{
+        refreshButton.click();
+        console.log('Auto-clicked refresh button');
     }}
+}}, {REFRESH_INTERVAL * 1000});
+
+// Method 2: Force page reload as fallback
+setTimeout(function() {{
+    console.log('Force reloading page after {REFRESH_INTERVAL} seconds');
+    window.location.reload();
 }}, {REFRESH_INTERVAL * 1000});
 </script>
 """, unsafe_allow_html=True)
@@ -2474,24 +2482,15 @@ with col4:
 display_earnings_calendar()
 
 # --------------------------------------------------------------
-# Final Auto-Refresh Check (must be at the very end)
+# Auto-Refresh Tracking (meta refresh handles the actual refresh)
 # --------------------------------------------------------------
-# This is the final check that triggers the refresh
-# It must be at the end of the script to work properly
+# Update refresh count when page loads (meta refresh will reload page)
 current_time_final = time.time()
 time_since_refresh_final = current_time_final - st.session_state.last_refresh
 
+# If enough time has passed, increment counter (page will refresh via meta tag)
 if time_since_refresh_final >= REFRESH_INTERVAL:
-    # Update refresh tracking
     st.session_state.last_refresh = current_time_final
     st.session_state.refresh_count += 1
-
-    # Clear all cached data to force fresh API calls
+    # Clear caches to ensure fresh data on next load
     st.cache_data.clear()
-
-    # Preserve ticker selection across refresh
-    current_ticker = st.session_state.get('selected_ticker', 'SPY')
-    st.query_params.ticker = current_ticker
-
-    # Force the refresh - this MUST be the last line
-    st.rerun()
